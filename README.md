@@ -3,6 +3,12 @@
 **DockPulse** is a small **port traffic simulator** with a live web dashboard. It mimics ships moving toward berths, queues, and congestion—then shows everything on a map and in panels (ships, berths, and a simple “decision engine”).  
 Data is **in memory** while the server runs; **Redis** is used to pass events between parts of the app (and you can plug in more listeners later).
 
+<img width="2940" height="944" alt="CleanShot 2026-04-20 at 22 10 17@2x" src="https://github.com/user-attachments/assets/6344f624-f6b0-4195-b67f-034343eb71d9" />
+
+<img width="2938" height="1682" alt="CleanShot 2026-04-20 at 22 10 34@2x" src="https://github.com/user-attachments/assets/cc0bfff0-d1dc-4ea6-8684-9a37b673719e" />
+
+<img width="2940" height="1546" alt="CleanShot 2026-04-20 at 22 10 57@2x" src="https://github.com/user-attachments/assets/c8520af9-b1a6-4d99-ab9b-b127860eaf6f" />
+
 ---
 
 ## What you get
@@ -132,7 +138,3 @@ public/        # Static fallback if the React build is missing
 - **State resets** — restarting Node clears in-memory port state (by design in this demo).
 
 ---
-
-## License
-
-Add a license file if you publish the project (for example MIT). This README does not grant any rights by itself.
