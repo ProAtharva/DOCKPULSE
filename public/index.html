@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DockPulse — Live</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0c1222;
+      --surface: #151d2e;
+      --border: #2a3548;
+      --text: #e8edf5;
+      --muted: #8b9bb4;
+      --accent: #0ea5e9;
+      --accent-warm: #f59e0b;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #f43f5e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: radial-gradient(ellipse 120% 80% at 50% -20%, #134e4a 0%, #1e2a4a 40%, var(--bg) 70%);
+      color: var(--text);
+    }
+    .wrap { max-width: 1120px; margin: 0 auto; padding: 1.25rem 1rem 2.5rem; }
+    header {
+      display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between;
+      gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+    }
+    header h1 { margin: 0; font-size: 1.35rem; font-weight: 700; letter-spacing: -0.02em; }
+    header p { margin: 0.35rem 0 0; font-size: 0.875rem; color: var(--muted); max-width: 36rem; line-height: 1.45; }
+    .meta { display: flex; flex-wrap: wrap; gap: 0.5rem 1rem; align-items: center; font-size: 0.8125rem; color: var(--muted); }
+    .pill {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.25rem 0.65rem; border-radius: 999px;
+      background: var(--surface); border: 1px solid var(--border); font-variant-numeric: tabular-nums;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.live { background: var(--success); box-shadow: 0 0 10px var(--success); }
+    .dot.off { background: var(--danger); }
+    .grid { display: grid; gap: 1rem; }
+    @media (min-width: 900px) {
+      .grid-main { grid-template-columns: 1fr 320px; align-items: start; }
+    }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1rem 1.1rem; overflow: hidden;
+    }
+    .card h2 {
+      margin: 0 0 0.75rem; font-size: 0.7rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted);
+    }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+    @media (min-width: 640px) { .stats { grid-template-columns: repeat(5, 1fr); } }
+    .stat {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 10px;
+      padding: 0.75rem 0.85rem;
+    }
+    .stat .val { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -0.03em; }
+    .stat .lbl { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+    .berths { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+    @media (max-width: 600px) { .berths { grid-template-columns: repeat(2, 1fr); } }
+    .berth {
+      border: 1px solid var(--border); border-radius: 10px; padding: 0.6rem 0.5rem;
+      text-align: center; min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center;
+      background: linear-gradient(180deg, rgba(59,130,246,0.06) 0%, transparent 100%);
+    }
+    .berth.occupied { border-color: rgba(34,197,94,0.45); }
+    .berth .bid { font-size: 0.65rem; color: var(--muted); font-weight: 600; letter-spacing: 0.06em; }
+    .berth .bname { font-size: 0.78rem; margin-top: 0.35rem; font-weight: 600; line-height: 1.2; word-break: break-word; }
+    .berth .empty { font-size: 0.75rem; color: var(--muted); font-style: italic; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
+    th, td { text-align: left; padding: 0.5rem 0.45rem; border-bottom: 1px solid var(--border); }
+    th { color: var(--muted); font-weight: 600; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; }
+    td { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.78rem; }
+    tr:last-child td { border-bottom: none; }
+    .badge {
+      display: inline-block; padding: 0.15rem 0.45rem; border-radius: 6px;
+      font-size: 0.68rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge.en_route { background: rgba(59,130,246,0.2); color: #93c5fd; }
+    .badge.approaching { background: rgba(234,179,8,0.2); color: #fde047; }
+    .badge.arrived { background: rgba(52,211,153,0.2); color: #6ee7b7; }
+    .badge.berthed { background: rgba(34,197,94,0.2); color: #86efac; }
+    .badge.queued { background: rgba(244,63,94,0.2); color: #fda4af; }
+    .intel-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.65rem; margin-top: 0.5rem; font-size: 0.78rem; color: var(--text); }
+    .intel-row .k { color: var(--muted); display: block; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .intel-val { font-weight: 700; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+    .sug-list { list-style: none; margin: 0; padding: 0; font-size: 0.78rem; }
+    .sug-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); line-height: 1.35; }
+    .sug-list li:last-child { border-bottom: none; }
+    .sev-c { color: #fca5a5; }
+    .sev-w { color: #fcd34d; }
+    .sev-i { color: var(--muted); }
+    .berth .bmeta { font-size: 0.65rem; color: var(--muted); margin-top: 0.2rem; }
+    .log { max-height: 420px; overflow-y: auto; font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 0.72rem; }
+    .log-item { padding: 0.45rem 0; border-bottom: 1px solid var(--border); line-height: 1.4; }
+    .log-item:last-child { border-bottom: none; }
+    .log time { color: var(--muted); font-size: 0.65rem; display: block; margin-bottom: 0.15rem; }
+    .log .evt { color: #a5b4fc; font-weight: 500; }
+    .empty-state { color: var(--muted); font-size: 0.85rem; padding: 0.5rem 0; }
+    .tick-flash { animation: flash 0.35s ease; }
+    @keyframes flash {
+      from { box-shadow: 0 0 0 2px var(--accent); }
+      to { box-shadow: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1><span style="color: var(--accent); font-weight: 800;">Dock</span>Pulse</h1>
+        <p style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--accent-warm); font-weight: 600;">
+          Real-time port traffic simulator · personal project
+        </p>
+        <p>
+          Fake ships, berths, and container counts advance on a <strong>2 second</strong> tick.
+          The UI streams updates over <strong>WebSockets</strong> — no refresh, no button clicks.
+          Stack: Node.js, Express, Socket.io, Redis Pub/Sub · <strong>decision engine</strong> assigns berths and scores congestion.
+        </p>
+      </div>
+      <div class="meta" aria-live="polite">
+        <span class="pill" id="connPill"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+        <span class="pill">Tick: <strong id="tickMs">—</strong></span>
+        <span class="pill" id="tickPill">Last update: <strong id="lastUpdate">—</strong></span>
+      </div>
+    </header>
+
+    <div class="grid grid-main">
+      <div class="grid" style="gap:1rem;">
+        <div class="card" id="statsCard">
+          <h2>Snapshot</h2>
+          <div class="stats">
+            <div class="stat"><div class="val" id="statShips">0</div><div class="lbl">Ships tracked</div></div>
+            <div class="stat"><div class="val" id="statContainers">0</div><div class="lbl">Containers (TEU index)</div></div>
+            <div class="stat"><div class="val" id="statEnRoute">0</div><div class="lbl">At sea</div></div>
+            <div class="stat"><div class="val" id="statQueued">0</div><div class="lbl">In queue</div></div>
+            <div class="stat"><div class="val" id="statBerthed">0</div><div class="lbl">Berthed</div></div>
+          </div>
+          <div class="intel-row" id="intelRow" aria-live="polite">
+            <div><span class="k">Congestion</span><span class="intel-val" id="intelCongestion">—</span></div>
+            <div><span class="k">Berth use</span><span class="intel-val" id="intelUtil">—</span></div>
+            <div><span class="k">15 min outlook</span><span class="intel-val" id="intel15">—</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Quays (5 berths)</h2>
+          <div class="berths" id="berths"></div>
+        </div>
+
+        <div class="card">
+          <h2>Vessels</h2>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Vessel</th>
+                  <th>Status</th>
+                  <th>ETA (min)</th>
+                  <th>Speed</th>
+                  <th>Cargo</th>
+                </tr>
+              </thead>
+              <tbody id="shipsBody">
+                <tr><td colspan="5" class="empty-state">Waiting for simulation data…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid" style="gap:1rem;">
+        <div class="card">
+          <h2>Event stream</h2>
+          <p class="empty-state" style="margin:0 0 0.75rem; font-size:0.78rem;">
+            Redis → WebSocket incl. <code style="color:#a5b4fc;">BERTH_ASSIGNED</code>,
+            <code style="color:#a5b4fc;">QUEUE_UPDATED</code>
+          </p>
+          <div class="log" id="log"></div>
+        </div>
+        <div class="card">
+          <h2>Suggestions API</h2>
+          <p class="empty-state" style="margin:0 0 0.5rem; font-size:0.75rem;">GET <code style="color:#a5b4fc;">/api/suggestions</code></p>
+          <ul class="sug-list" id="sugList"><li class="empty-state">Loading…</li></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const MAX_LOG = 60;
+    const shipsBody = document.getElementById('shipsBody');
+    const berthsEl = document.getElementById('berths');
+    const logEl = document.getElementById('log');
+    const connDot = document.getElementById('connDot');
+    const connText = document.getElementById('connText');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const tickMs = document.getElementById('tickMs');
+    const statsCard = document.getElementById('statsCard');
+    const statShips = document.getElementById('statShips');
+    const statContainers = document.getElementById('statContainers');
+    const statEnRoute = document.getElementById('statEnRoute');
+    const statQueued = document.getElementById('statQueued');
+    const statBerthed = document.getElementById('statBerthed');
+    const intelCongestion = document.getElementById('intelCongestion');
+    const intelUtil = document.getElementById('intelUtil');
+    const intel15 = document.getElementById('intel15');
+    const sugList = document.getElementById('sugList');
+
+    function fmtTime(ts) {
+      const d = typeof ts === 'number' ? new Date(ts) : new Date();
+      return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
+    function setConnected(connected) {
+      connDot.className = 'dot ' + (connected ? 'live' : 'off');
+      connText.textContent = connected ? 'Connected' : 'Disconnected';
+    }
+
+    function renderState(state) {
+      if (!state) return;
+      tickMs.textContent = (state.tickMs != null ? state.tickMs : 2000) + ' ms';
+      lastUpdate.textContent = fmtTime();
+      statsCard.classList.remove('tick-flash');
+      void statsCard.offsetWidth;
+      statsCard.classList.add('tick-flash');
+
+      const ships = state.ships || [];
+      statShips.textContent = ships.length;
+      statContainers.textContent = state.containers ?? 0;
+      const atSea = ships.filter((s) => s.status === 'en_route' || s.status === 'approaching').length;
+      const queued = ships.filter((s) => s.status === 'queued').length;
+      const berthed = ships.filter((s) => s.status === 'berthed').length;
+      statEnRoute.textContent = atSea;
+      statQueued.textContent = queued;
+      statBerthed.textContent = berthed;
+
+      const d = state.decision || {};
+      intelCongestion.textContent = d.congestionScore != null ? d.congestionScore : '—';
+      intelUtil.textContent = d.berthUtilizationPercent != null ? d.berthUtilizationPercent + '%' : '—';
+      intel15.textContent =
+        d.predictedCongestion15m != null ? d.predictedCongestion15m + ' (' + (d.predictionLabel || '') + ')' : '—';
+
+      const byId = Object.fromEntries(ships.map((s) => [s.id, s]));
+
+      if (ships.length === 0) {
+        shipsBody.innerHTML = '<tr><td colspan="5" class="empty-state">No vessels yet — the sim adds traffic on random ticks.</td></tr>';
+      } else {
+        shipsBody.innerHTML = ships
+          .map((s) => {
+            const st = s.status || '';
+            return `<tr>
+              <td>${escapeHtml(s.name)}</td>
+              <td><span class="badge ${st}">${escapeHtml(st)}</span></td>
+              <td>${s.eta ?? '—'}</td>
+              <td>${s.speed ?? '—'} kn</td>
+              <td>${s.cargoLoad ?? '—'}</td>
+            </tr>`;
+          })
+          .join('');
+      }
+
+      berthsEl.innerHTML = (state.berths || [])
+        .map((b) => {
+          const ship = b.shipId ? byId[b.shipId] : null;
+          const occ = b.status === 'busy' || !!ship;
+          const q = b.queueLength || 0;
+          const line = occ
+            ? `<div class="bname">${escapeHtml(ship ? ship.name : b.currentShip || '—')}</div>`
+            : `<div class="empty">Free</div>`;
+          return `<div class="berth ${occ ? 'occupied' : ''}">
+            <div class="bid">${escapeHtml(b.id)} · ${escapeHtml(b.status || '—')}</div>
+            ${line}
+            ${q > 0 ? `<div class="bmeta">${q} waiting in lane</div>` : ''}
+          </div>`;
+        })
+        .join('');
+    }
+
+    async function loadSuggestions() {
+      try {
+        const r = await fetch('/api/suggestions');
+        const data = await r.json();
+        const items = data.suggestions || [];
+        if (items.length === 0) {
+          sugList.innerHTML = '<li class="empty-state">No suggestions.</li>';
+          return;
+        }
+        sugList.innerHTML = items
+          .map(
+            (s) =>
+              `<li class="sev-${s.severity === 'critical' ? 'c' : s.severity === 'warning' ? 'w' : 'i'}">${escapeHtml(
+                s.text,
+              )}<br/><span style="font-size:0.65rem;opacity:0.85;">${escapeHtml(s.action)}</span></li>`,
+          )
+          .join('');
+      } catch (e) {
+        sugList.innerHTML = '<li class="empty-state">Could not load /api/suggestions</li>';
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function pushLog(entry) {
+      const div = document.createElement('div');
+      div.className = 'log-item';
+      const t = entry.ts ? fmtTime(entry.ts) : fmtTime();
+      div.innerHTML = `<time>${t}</time><span class="evt">${escapeHtml(entry.type)}</span> — ${escapeHtml(
+        summarizePayload(entry)
+      )}`;
+      logEl.insertBefore(div, logEl.firstChild);
+      while (logEl.children.length > MAX_LOG) logEl.removeChild(logEl.lastChild);
+    }
+
+    function summarizePayload(entry) {
+      const p = entry.payload || {};
+      if (entry.type === 'BERTH_ASSIGNED') {
+        return `${p.shipName || p.shipId} → ${p.berthId}`;
+      }
+      if (entry.type === 'QUEUE_UPDATED') {
+        return `${p.shipName || p.shipId} queued @ ${p.berthId} (lane ${p.queueLength}, global ${p.globalWaiting})`;
+      }
+      if (entry.type === 'SHIP_ARRIVED' && p.ship) {
+        return `${p.ship.name || p.ship.id} (decision engine assigns berth)`;
+      }
+      if (p.ship) return p.ship.name || p.ship.id;
+      try {
+        return JSON.stringify(p).slice(0, 120);
+      } catch {
+        return '';
+      }
+    }
+
+    const socket = io({ transports: ['websocket', 'polling'] });
+
+    socket.on('connect', () => setConnected(true));
+    socket.on('disconnect', () => setConnected(false));
+
+    socket.on('port:state', (st) => {
+      renderState(st);
+      loadSuggestions();
+    });
+    socket.on('port:event', (msg) => {
+      if (msg && msg.type) pushLog(msg);
+    });
+    loadSuggestions();
+    setInterval(loadSuggestions, 8000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    margin: 0;
+  }
+  ::selection {
+    @apply bg-cyan-500/30 text-white;
+  }
+}
+
+@layer components {
+  /* Primary frosted surface — DockPulse shell */
+  .glass-panel {
+    @apply rounded-2xl border border-white/[0.06] bg-slate-900/50 shadow-glass;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .glass-panel--raise {
+    @apply transition duration-300 ease-out hover:border-white/[0.1] hover:shadow-glass-lg;
+  }
+
+  .glass-panel-static {
+    @apply rounded-2xl border border-white/[0.06] bg-slate-900/55 shadow-glass;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .dpt-label {
+    @apply text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500;
+  }
+
+  .dpt-input {
+    @apply w-full rounded-xl border border-white/[0.08] bg-slate-950/60 px-3.5 py-2.5 font-mono text-sm text-cyan-50 shadow-inner shadow-black/30 outline-none transition;
+    @apply placeholder:text-slate-600 focus:border-cyan-400/40 focus:ring-2 focus:ring-cyan-500/20;
+  }
+
+  .dpt-select {
+    @apply dpt-input cursor-pointer appearance-none bg-[length:1rem] bg-[right_0.6rem_center] bg-no-repeat pr-10;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+  }
+
+  .custom-scroll::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scroll::-webkit-scrollbar-track {
+    @apply rounded-full bg-transparent;
+  }
+  .custom-scroll::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-cyan-500/20 hover:bg-cyan-400/35;
+  }
+}
+
+/* Leaflet — sit inside our chrome; parent supplies height via flex */
+.leaflet-container {
+  @apply h-full w-full overflow-hidden rounded-xl bg-slate-950 font-sans;
+  font-family: inherit;
+}
+
+.leaflet-control-container .leaflet-top {
+  z-index: 400;
+}
+
